@@ -15,15 +15,28 @@ DOCKER_DEV_COMPOSE_FILE := docker-dev/docker-compose.yml
 
 .PHONY: test
 test:
-	echo "test"
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up agent
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up migrate
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up test
 
 .PHONY: build
 build:
-	echo "build"
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up builder
 
 .PHONY: release
 release:
-	echo "release"
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) build
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up agent
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up migrate
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up test
+
+.PHONY: clean
+clean:
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) kill
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) rm -f
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) kill
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) rm -f
 
 # =================================================================================================
 

@@ -8,7 +8,7 @@ test:
   links:
     - db
   environment:
-    - DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+    DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
 
 builder:
   build: ../../
@@ -21,7 +21,7 @@ builder:
     - cache
 
 agent:
-  image: phrasebooklearner/docker-ansible
+  image: phrasebooklearner/ansible
   volumes:
     - ../../ansible/probe.yml:/ansible/site.yml
   links:
