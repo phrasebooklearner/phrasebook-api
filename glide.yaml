@@ -1,0 +1,9 @@
+package: phrasebook-api
+import:
+- package: github.com/labstack/echo
+  version: ~3.1
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: github.com/asaskevich/govalidator
+- package: github.com/go-sql-driver/mysql

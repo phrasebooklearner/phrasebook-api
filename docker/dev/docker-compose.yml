@@ -1,0 +1,61 @@
+test:
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
+  entrypoint: "test.sh"
+  command: ["go", "test", "phrasebook-api/src/..."]
+  volumes_from:
+    - cache
+  links:
+    - db
+  environment:
+    - DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+
+builder:
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
+  entrypoint: "build.sh"
+  command: ["go", "install"]
+  volumes:
+    - ../../build:/go/bin
+  volumes_from:
+    - cache
+
+agent:
+  image: phrasebooklearner/docker-ansible
+  volumes:
+    - ../../ansible/probe.yml:/ansible/site.yml
+  links:
+    - db
+  environment:
+    PROBE_HOST: db
+    PROBE_PORT: 3306
+
+migrate:
+  build: ../../
+  dockerfile: docker/migrate/Dockerfile
+  links:
+    - db
+  environment:
+    MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+
+cache:
+  build: ../../
+  dockerfile: docker/dev/Dockerfile
+  volumes:
+    - /tmp/cache/.glide:/go/src/phrasebook-api/.glide # it is a cache on the docker host!
+    - /dependencies
+  entrypoint: "true"
+
+db:
+  image: mysql:5.7
+  hostname: db
+  expose:
+    - "3306"
+  command:
+    - --character-set-server=utf8
+    - --collation-server=utf8_general_ci
+  environment:
+    MYSQL_ROOT_PASSWORD: dev
+    MYSQL_DATABASE: dev
+    MYSQL_USER: dev
+    MYSQL_PASSWORD: dev
