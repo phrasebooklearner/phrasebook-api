@@ -1,4 +1,5 @@
 .idea
 build
+reports
 .DS_Store
 vendor

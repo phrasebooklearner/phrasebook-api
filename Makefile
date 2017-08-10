@@ -13,24 +13,36 @@ DEV_COMPOSE_FILE := docker/dev/docker-compose.yml
 REL_COMPOSE_FILE := docker/release/docker-compose.yml
 DOCKER_DEV_COMPOSE_FILE := docker-dev/docker-compose.yml
 
+# Check and inspect logic
+INSPECT := $$(docker-compose -p $$1 -f $$2 ps -q $$3 | xargs -I ARGS docker inspect -f "{{ .State.ExitCode }}" ARGS)
+
+CHECK := @bash -c '\
+  if [[ $(INSPECT) -ne 0 ]]; \
+  then exit $(INSPECT); fi' VALUE
+
 .PHONY: test
 test:
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up agent
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up migrate
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm agent
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up test
+	docker cp $$(docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) ps -q test):/reports/. reports
+	${CHECK} $(DEV_PROJECT) $(DEV_COMPOSE_FILE) test
 
 .PHONY: build
 build:
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up builder
+	${CHECK} $(DEV_PROJECT) $(DEV_COMPOSE_FILE) builder
 	docker cp $$(docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) ps -q builder):/go/bin/. build
 
 .PHONY: release
 release:
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) build
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up agent
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up migrate
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) run --rm agent
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up test
+	docker cp $$(docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) ps -q test):/reports/. reports
+	${CHECK} $(REL_PROJECT) $(REL_COMPOSE_FILE) test
 
 .PHONY: clean
 clean:
