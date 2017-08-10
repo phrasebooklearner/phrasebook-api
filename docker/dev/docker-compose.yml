@@ -1,19 +1,21 @@
 test:
   build: ../../
   dockerfile: docker/dev/Dockerfile
-  entrypoint: "test.sh"
-  command: ["go", "test", "phrasebook-api/src/..."]
+  entrypoint: ["test.sh"]
+  command: ["test-run.sh"]
   volumes_from:
     - cache
   links:
     - db
   environment:
+    TEST_NAMESPACE: phrasebook-api/src/...
+    TEST_REPORT_PATH: /reports/unit.xml
     DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
 
 builder:
   build: ../../
   dockerfile: docker/dev/Dockerfile
-  entrypoint: "build.sh"
+  entrypoint: ["build.sh"]
   command: ["go", "install"]
   volumes_from:
     - cache

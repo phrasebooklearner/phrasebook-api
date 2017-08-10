@@ -72,7 +72,7 @@ fmt:
 .PHONY: unit-test
 unit-test:
 	${INFO} "Running unit tests..."
-	go test phrasebook-api/src/... -tags unit
+	go test -v phrasebook-api/src/... -tags unit
 
 .PHONY: test-all
 test-all:
