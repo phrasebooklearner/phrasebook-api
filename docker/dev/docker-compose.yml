@@ -15,15 +15,11 @@ builder:
   dockerfile: docker/dev/Dockerfile
   entrypoint: "build.sh"
   command: ["go", "install"]
-  volumes:
-    - ../../build:/go/bin
   volumes_from:
     - cache
 
 agent:
   image: phrasebooklearner/ansible
-  volumes:
-    - ../../ansible/probe.yml:/ansible/site.yml
   links:
     - db
   environment:

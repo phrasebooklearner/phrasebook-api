@@ -1,0 +1,5 @@
+FROM nginx
+MAINTAINER oliosinter <olio.sinter@gmail.com>
+
+# Copy configuration file
+COPY nginx.conf /etc/nginx/nginx.conf

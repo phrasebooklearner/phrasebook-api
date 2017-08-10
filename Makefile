@@ -1,7 +1,7 @@
 # Project variables
 PROJECT_NAME ?= phrasebook-api
 ORG_NAME ?= phrasebooklearner
-REPONAME ?= phrasebook-api
+REPO_NAME ?= phrasebook-api
 
 # Docker Compose Project Names
 REL_PROJECT := $(PROJECT_NAME)$(BUILD_ID)
@@ -23,6 +23,7 @@ test:
 .PHONY: build
 build:
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up builder
+	docker cp $$(docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) ps -q builder):/go/bin/. build
 
 .PHONY: release
 release:
@@ -34,9 +35,10 @@ release:
 .PHONY: clean
 clean:
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) kill
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) rm -f
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) rm -f -v # -v removing dangling volumes
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) kill
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) rm -f
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) rm -f -v # -v removing dangling volumes
+	docker images -q -f dangling=true -f label=application=$(REPO_NAME) | xargs -I ARGS docker rmi -f ARGS
 
 # =================================================================================================
 
