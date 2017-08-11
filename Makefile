@@ -22,7 +22,9 @@ CHECK := @bash -c '\
 
 .PHONY: test
 test:
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) pull
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build --pull test
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build cache
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm agent
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up test
@@ -37,7 +39,9 @@ build:
 
 .PHONY: release
 release:
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) build
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) pull test
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) build app
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) build --pull nginx
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) run --rm agent
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) up test
