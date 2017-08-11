@@ -7,14 +7,7 @@ RUN go get -u github.com/jstemmer/go-junit-report
 # Setting cache directory (though glide still doesn't support it)
 ENV XDG_CACHE_HOME=/cache
 
-# OUTPUT: Build artefacts are output here
-VOLUME /go/bin
-
-# OUTPUT: Downloaded dependencies are output here
-VOLUME /dependencies
-
-# OUTPUT: Test reports are output here
-VOLUME /reports
+RUN mkdir /reports
 
 # Add test entrypoint script
 COPY scripts/test.sh /usr/local/bin/test.sh

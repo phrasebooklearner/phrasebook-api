@@ -1,57 +1,63 @@
-app:
-  build: ../../
-  dockerfile: docker/release/Dockerfile
-  links:
-    - db
-  command: ["/go/bin/phrasebook-api"]
-  expose:
-    - "1234"
-  environment:
-    APPLICATION_PORT: 1234
-    DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+version: '2'
 
-nginx:
-  build: .
-  dockerfile: Dockerfile.nginx
-  ports:
-    - "8080:80"
-  links:
-    - app
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/release/Dockerfile
+    links:
+      - db
+    command: ["/go/bin/phrasebook-api"]
+    expose:
+      - "1234"
+    environment:
+      APPLICATION_PORT: 1234
+      DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
 
-test:
-  image: phrasebooklearner/phrasebook-specs
-  links:
-    - nginx
-  environment:
-    PHRASEBOOK_API_ENDPOINT: http://nginx:80
-    JUNIT_REPORT_PATH: /reports/acceptance.xml
-  command: --reporter mocha-jenkins-reporter
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "8080:80"
+    links:
+      - app
 
-db:
-  image: mysql:5.7
-  expose:
-    - "3306"
-  command:
-    - --character-set-server=utf8
-    - --collation-server=utf8_general_ci
-  environment:
-    MYSQL_ROOT_PASSWORD: dev
-    MYSQL_DATABASE: dev
-    MYSQL_USER: dev
-    MYSQL_PASSWORD: dev
+  test:
+    image: phrasebooklearner/phrasebook-specs
+    links:
+      - nginx
+    environment:
+      PHRASEBOOK_API_ENDPOINT: http://nginx:80
+      JUNIT_REPORT_PATH: /reports/acceptance.xml
+    command: --reporter mocha-jenkins-reporter
 
-migrate:
-  build: ../../
-  dockerfile: docker/migrate/Dockerfile
-  links:
-    - db
-  environment:
-    MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+  db:
+    image: mysql:5.7
+    expose:
+      - "3306"
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: dev
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
 
-agent:
-  image: phrasebooklearner/ansible
-  links:
-    - db
-  environment:
-    PROBE_HOST: db
-    PROBE_PORT: 3306
+  migrate:
+    build:
+      context: ../../
+      dockerfile: docker/migrate/Dockerfile
+    links:
+      - db
+    environment:
+      MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+
+  agent:
+    image: phrasebooklearner/ansible
+    links:
+      - db
+    environment:
+      PROBE_HOST: db
+      PROBE_PORT: 3306

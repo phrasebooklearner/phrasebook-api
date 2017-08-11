@@ -5,7 +5,7 @@
 glide install
 
 # Coping the dependencies to a volume
-cp -r /go/src/phrasebook-api/vendor/* /dependencies
+cp -r /go/src/phrasebook-api/vendor/* /vendor
 
 # Run test.sh arguments
 exec $@

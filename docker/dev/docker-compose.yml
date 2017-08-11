@@ -1,59 +1,67 @@
-test:
-  build: ../../
-  dockerfile: docker/dev/Dockerfile
-  entrypoint: ["test.sh"]
-  command: ["test-run.sh"]
-  volumes_from:
-    - cache
-  links:
-    - db
-  environment:
-    TEST_NAMESPACE: phrasebook-api/src/...
-    TEST_REPORT_PATH: /reports/unit.xml
-    DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+version: '2'
 
-builder:
-  build: ../../
-  dockerfile: docker/dev/Dockerfile
-  entrypoint: ["build.sh"]
-  command: ["go", "install"]
-  volumes_from:
-    - cache
+volumes:
 
-agent:
-  image: phrasebooklearner/ansible
-  links:
-    - db
-  environment:
-    PROBE_HOST: db
-    PROBE_PORT: 3306
+  vendor:
+    driver: local
 
-migrate:
-  build: ../../
-  dockerfile: docker/migrate/Dockerfile
-  links:
-    - db
-  environment:
-    MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+  cache:
+    external: true
 
-cache:
-  build: ../../
-  dockerfile: docker/dev/Dockerfile
-  volumes:
-    - /tmp/cache/.glide:/go/src/phrasebook-api/.glide # it is a cache on the docker host!
-    - /dependencies
-  entrypoint: "true"
+services:
 
-db:
-  image: mysql:5.7
-  hostname: db
-  expose:
-    - "3306"
-  command:
-    - --character-set-server=utf8
-    - --collation-server=utf8_general_ci
-  environment:
-    MYSQL_ROOT_PASSWORD: dev
-    MYSQL_DATABASE: dev
-    MYSQL_USER: dev
-    MYSQL_PASSWORD: dev
+  test:
+    build:
+      context: ../../
+      dockerfile: docker/dev/Dockerfile
+    entrypoint: ["test.sh"]
+    command: ["test-run.sh"]
+    volumes:
+      - cache:/go/src/phrasebook-api/.glide/
+      - vendor:/vendor
+    links:
+      - db
+    environment:
+      TEST_NAMESPACE: phrasebook-api/src/...
+      TEST_REPORT_PATH: /reports/unit.xml
+      DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+
+  builder:
+    build:
+      context: ../../
+      dockerfile: docker/dev/Dockerfile
+    entrypoint: ["build.sh"]
+    command: ["go", "install"]
+    volumes:
+      - vendor:/vendor
+
+  agent:
+    image: phrasebooklearner/ansible
+    links:
+      - db
+    environment:
+      PROBE_HOST: db
+      PROBE_PORT: 3306
+
+  migrate:
+    build:
+      context: ../../
+      dockerfile: docker/migrate/Dockerfile
+    links:
+      - db
+    environment:
+      MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+
+  db:
+    image: mysql:5.7
+    hostname: db
+    expose:
+      - "3306"
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: dev
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev

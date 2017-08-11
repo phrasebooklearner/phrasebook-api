@@ -41,9 +41,9 @@ BUILD_TAG ?= $(BUILD_EXPRESSION)
 
 .PHONY: test
 test:
+	docker volume create --name cache
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) pull
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build --pull test
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build cache
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm agent
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up test
@@ -52,6 +52,7 @@ test:
 
 .PHONY: build
 build:
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) build builder
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) up builder
 	${CHECK} $(DEV_PROJECT) $(DEV_COMPOSE_FILE) builder
 	docker cp $$(docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) ps -q builder):/go/bin/. build
@@ -69,10 +70,8 @@ release:
 
 .PHONY: clean
 clean:
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) kill
-	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) rm -f -v # -v removing dangling volumes
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) kill
-	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) rm -f -v # -v removing dangling volumes
+	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) down -v
+	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) down -v
 	docker images -q -f dangling=true -f label=application=$(REPO_NAME) | xargs -I ARGS docker rmi -f ARGS
 
 .PHONY: tag
