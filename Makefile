@@ -20,6 +20,25 @@ CHECK := @bash -c '\
   if [[ $(INSPECT) -ne 0 ]]; \
   then exit $(INSPECT); fi' VALUE
 
+# Use these settings to specify a custom Docker registry
+DOCKER_REGISTRY ?= docker.io
+
+# WARNING: Set DOCKER_REGISTRY_AUTH to empty for Docker Hub
+# Set DOCKER_REGISTRY_AUTH to auth endpoint for private Docker registry
+DOCKER_REGISTRY_AUTH ?=
+
+# Application Service Name - must match Docker Compose release specification application service name
+APP_SERVICE_NAME := app
+
+# Build tag expression - can be used to evaulate a shell expression at runtime
+BUILD_TAG_EXPRESSION ?= date -u +%Y%m%d%H%M%S
+
+# Execute shell expression
+BUILD_EXPRESSION := $(shell $(BUILD_TAG_EXPRESSION))
+
+# Build tag - defaults to BUILD_EXPRESSION if not defined
+BUILD_TAG ?= $(BUILD_EXPRESSION)
+
 .PHONY: test
 test:
 	docker-compose -p $(DEV_PROJECT) -f $(DEV_COMPOSE_FILE) pull
@@ -56,6 +75,25 @@ clean:
 	docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) rm -f -v # -v removing dangling volumes
 	docker images -q -f dangling=true -f label=application=$(REPO_NAME) | xargs -I ARGS docker rmi -f ARGS
 
+.PHONY: tag
+tag:
+	$(foreach tag,$(TAG_ARGS), docker tag $(IMAGE_ID) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag);)
+
+.PHONY: buildtag
+buildtag:
+	$(foreach tag,$(BUILDTAG_ARGS), docker tag $(IMAGE_ID) $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME):$(tag).$(BUILD_TAG);)
+
+.PHONY: login
+login:
+	docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD $$DOCKER_REGISTRY_AUTH
+
+.PHONY: logout
+logout:
+	docker logout
+
+.PHONY: publish
+publish:
+	$(foreach tag,$(shell echo $(REPO_EXPR)), docker push $(tag);)
 # =================================================================================================
 
 .PHONY: env-up
@@ -106,3 +144,37 @@ INFO := @bash -c '\
   printf $(YELLOW); \
   echo "=> $$1"; \
   printf $(NC)' VALUE
+
+# Get container id of application service container
+APP_CONTAINER_ID := $$(docker-compose -p $(REL_PROJECT) -f $(REL_COMPOSE_FILE) ps -q $(APP_SERVICE_NAME))
+
+# Get image id of application service
+IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $(APP_CONTAINER_ID))
+
+# Repository Filter
+ifeq ($(DOCKER_REGISTRY), docker.io)
+	REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+else
+	REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+endif
+
+# Introspect repository tags
+REPO_EXPR := $$(docker inspect -f '{{range .RepoTags}}{{.}} {{end}}' $(IMAGE_ID) | grep -oh "$(REPO_FILTER)" | xargs)
+
+# Extract build tag arguments
+ifeq (buildtag,$(firstword $(MAKECMDGOALS)))
+  BUILDTAG_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifeq ($(BUILDTAG_ARGS),)
+    $(error You must specify a tag)
+  endif
+  $(eval $(BUILDTAG_ARGS):;@:)
+endif
+
+# Extract tag arguments
+ifeq (tag,$(firstword $(MAKECMDGOALS)))
+  TAG_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  ifeq ($(TAG_ARGS),)
+    $(error You must specify a tag)
+  endif
+  $(eval $(TAG_ARGS):;@:)
+endif
