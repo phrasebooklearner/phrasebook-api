@@ -16,7 +16,7 @@ func TestValidationError_GetHTTPCode(t *testing.T) {
 
 func TestValidationError_GetErrorType(t *testing.T) {
 	// arrange
-	//err := NewValidationError("field", "error")
+	err := NewValidationError("field", "error")
 	// assert
-	assert.Equal(t, TypeValidationError, "fail test!")
+	assert.Equal(t, TypeValidationError, err.GetErrorType())
 }
