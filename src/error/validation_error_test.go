@@ -18,5 +18,5 @@ func TestValidationError_GetErrorType(t *testing.T) {
 	// arrange
 	err := NewValidationError("field", "error")
 	// assert
-	assert.Equal(t, TypeValidationError, err.GetErrorType())
+	assert.Equal(t, TypeValidationError, "fail test!")
 }
