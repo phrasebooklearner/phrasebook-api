@@ -8,6 +8,7 @@ node {
 
         stage ('Build application artefacts') {
             sh 'make build'
+            sh 'make clean'
         }
 
         stage ('Create release environment and run acceptance tests') {
