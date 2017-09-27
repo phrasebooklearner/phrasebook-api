@@ -2,4 +2,5 @@
 build
 reports
 .DS_Store
+*.swp
 vendor
