@@ -6,7 +6,6 @@ REPO_NAME ?= phrasebook-api
 # Docker Compose Project Names
 REL_PROJECT := $(PROJECT_NAME)$(BUILD_ID)
 DEV_PROJECT := $(REL_PROJECT)dev
-TE := $
 
 # Filenames
 DEV_COMPOSE_FILE := docker/dev/docker-compose.yml
