@@ -152,9 +152,9 @@ IMAGE_ID := $$(docker inspect -f '{{ .Image }}' $(APP_CONTAINER_ID))
 
 # Repository Filter
 ifeq ($(DOCKER_REGISTRY), docker.io)
-	REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+  REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
 else
-	REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+  REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
 endif
 
 # Introspect repository tags
