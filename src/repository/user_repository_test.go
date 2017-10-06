@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"phrasebook-api/src/config"
-	db2 "phrasebook-api/src/db"
+	"phrasebook-api/src/database"
 	apiError "phrasebook-api/src/error"
 	"phrasebook-api/src/model"
 
@@ -21,7 +21,7 @@ func TestCreateAndSearchUser_Success(t *testing.T) {
 		Email: "petya@vasya.com",
 	}
 	cfg := config.NewTestConfig()
-	db := db2.NewDBConnection(cfg.GetDatabaseDSN())
+	db := database.NewDBConnection(cfg.GetDatabaseDSN())
 	rep := NewUserRepository(db)
 
 	// act
@@ -47,7 +47,7 @@ func TestCreateUser_AlreadyExists(t *testing.T) {
 		Email: "vasya@petya.com",
 	}
 	cfg := config.NewTestConfig()
-	db := db2.NewDBConnection(cfg.GetDatabaseDSN())
+	db := database.NewDBConnection(cfg.GetDatabaseDSN())
 	rep := NewUserRepository(db)
 
 	// act

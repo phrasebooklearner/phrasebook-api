@@ -5,7 +5,7 @@ import (
 
 	"phrasebook-api/src/config"
 	"phrasebook-api/src/controller"
-	"phrasebook-api/src/db"
+	"phrasebook-api/src/database"
 	apiError "phrasebook-api/src/error"
 	"phrasebook-api/src/repository"
 
@@ -26,7 +26,7 @@ func NewApp(config config.Config, router *echo.Echo) {
 	app := &app{
 		config: config,
 		router: router,
-		db:     db.NewDBConnection(config.GetDatabaseDSN()),
+		db:     database.NewDBConnection(config.GetDatabaseDSN()),
 	}
 
 	app.setRepositories()
