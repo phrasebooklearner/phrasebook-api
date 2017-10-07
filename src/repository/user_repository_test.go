@@ -7,58 +7,48 @@ import (
 
 	"phrasebook-api/src/config"
 	"phrasebook-api/src/database"
-	apiError "phrasebook-api/src/error"
-	"phrasebook-api/src/model"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateAndSearchUser_Success(t *testing.T) {
 	// arrange
-	newUser := &model.User{
-		Name: "petya",
-		Password: "some_strange_pass",
-		Email: "petya@vasya.com",
-	}
+	name, password, email := getUserArguments("petya")
 	cfg := config.NewTestConfig()
 	db := database.NewDBConnection(cfg.GetDatabaseDSN())
 	rep := NewUserRepository(db)
 
 	// act
-	createErr := rep.CreateUser(newUser)
+	newUser, createErr := rep.CreateUser(name, password, email)
 	searchUser, searchErr := rep.GetUserByEmail(newUser.Email)
 
 	// assert
 	assert.Nil(t, createErr)
 	assert.Nil(t, searchErr)
 	assert.Equal(t, *newUser, *searchUser)
+	assert.Equal(t, searchUser.Name, name)
+	assert.Equal(t, searchUser.Password, passwordHash(password))
+	assert.Equal(t, searchUser.Email, email)
 }
 
 func TestCreateUser_AlreadyExists(t *testing.T) {
 	// arrange
-	user1 := &model.User{
-		Name: "petya",
-		Password: "some_strange_pass",
-		Email: "vasya@petya.com",
-	}
-	user2 := &model.User{
-		Name: "vasya",
-		Password: "some_strange_pass",
-		Email: "vasya@petya.com",
-	}
+	name, password, email := getUserArguments("vasya")
 	cfg := config.NewTestConfig()
 	db := database.NewDBConnection(cfg.GetDatabaseDSN())
 	rep := NewUserRepository(db)
 
 	// act
-	first := rep.CreateUser(user1)
-	second := rep.CreateUser(user2)
-	err, ok := second.(apiError.ValidationError)
+	user1, err1 := rep.CreateUser(name, password, email)
+	user2, err2 := rep.CreateUser(name, password, email)
 
 	// assert
-	assert.Nil(t, first)
-	assert.NotNil(t, second)
-	assert.True(t, ok)
-	assert.Equal(t, err.Field, "email")
-	assert.Equal(t, err.Message, "such email already exists")
+	assert.NotNil(t, user1)
+	assert.Nil(t, err1)
+	assert.Nil(t, user2)
+	assert.NotNil(t, err2)
+}
+
+func getUserArguments(name string) (string, string, string) {
+	return name, "qwerty", name + "@gmail.com"
 }
