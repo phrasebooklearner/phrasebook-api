@@ -1,4 +1,26 @@
 # ======================================================================================================================
+# LOCAL TARGETS AND FUNCTIONS
+# ======================================================================================================================
+
+LOCAL_PROJECT := local-phrase
+LOCAL_COMPOSE_FILE := docker/local/docker-compose.yml
+
+deps:
+	glide install
+
+unit:
+	go test -v phrasebook-api/src/... -tags unit
+
+run:
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm agent
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm migrate
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) build app
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) up app
+
+stop:
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) down -v
+
+# ======================================================================================================================
 # CI TARGETS AND FUNCTIONS
 # ======================================================================================================================
 # Project variables

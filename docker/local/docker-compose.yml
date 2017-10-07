@@ -1,0 +1,55 @@
+version: '2'
+
+volumes:
+
+  cache:
+    external: true
+
+services:
+
+  app:
+    build:
+      context: ../../
+      dockerfile: docker/local/Dockerfile
+    links:
+      - db
+    command: ["go", "run", "main.go"]
+    ports:
+      - "1234:1234"
+    volumes:
+      - ../../:/go/src/phrasebook-api
+      - cache:/cache
+    environment:
+      APPLICATION_PORT: 1234
+      DATABASE_DSN: mysql://dev:dev@tcp(db:3306)/dev
+
+  agent:
+    image: phrasebooklearner/ansible
+    links:
+      - db
+    environment:
+      PROBE_HOST: db
+      PROBE_PORT: 3306
+
+  migrate:
+    build:
+      context: ../../
+      dockerfile: docker/migrate/Dockerfile
+    links:
+      - db
+    environment:
+      MIGRATION_DATABASE: mysql://dev:dev@tcp(db:3306)/dev
+
+  db:
+    image: mysql:5.7
+    hostname: db
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8
+      - --collation-server=utf8_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: dev
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
