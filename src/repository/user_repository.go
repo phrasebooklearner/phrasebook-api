@@ -4,17 +4,17 @@ import (
 	"crypto/sha512"
 	"database/sql"
 	"fmt"
-
-	apiError "phrasebook-api/src/error"
 	"phrasebook-api/src/model"
 )
 
 type UserRepository interface {
-	CreateUser(*model.User) error
+	CreateUser(name, password, email string) (*model.User, error)
 	GetUserByEmail(string) (*model.User, error)
 }
 
-func NewUserRepository(db *sql.DB) UserRepository {
+var _ UserRepository = (*userRepository)(nil)
+
+func NewUserRepository(db *sql.DB) *userRepository {
 	return &userRepository{
 		db: db,
 	}
@@ -24,38 +24,31 @@ type userRepository struct {
 	db *sql.DB
 }
 
-func (u *userRepository) CreateUser(user *model.User) error {
-	existingUser, searchErr := u.GetUserByEmail(user.Email)
+func (u *userRepository) CreateUser(name, password, email string) (*model.User, error) {
+	password = passwordHash(password)
 
-	if searchErr != nil {
-		return searchErr
-	}
-
-	if existingUser != nil {
-		return apiError.NewValidationError("email", "such email already exists")
-	}
-
-	user.Password = passwordHash(user.Password)
-
-	result, insertErr := u.db.Exec(
+	result, err := u.db.Exec(
 		"INSERT INTO users (name, password, email) VALUES(?, ?, ?)",
-		user.Name,
-		user.Password,
-		user.Email,
+		name, password, email,
 	)
 
-	if insertErr != nil {
-		return insertErr
+	if err != nil {
+		return nil, err
 	}
 
-	userID, resultErr := result.LastInsertId()
-	if resultErr != nil {
-		return resultErr
+	userID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
 	}
 
-	user.ID = userID
+	userModel := &model.User{
+		ID:       userID,
+		Name:     name,
+		Password: password,
+		Email:    email,
+	}
 
-	return nil
+	return userModel, nil
 }
 
 func (u *userRepository) GetUserByEmail(email string) (*model.User, error) {
