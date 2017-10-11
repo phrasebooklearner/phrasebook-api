@@ -4,9 +4,9 @@ import (
 	"database/sql"
 
 	"phrasebook-api/src/config"
-	"phrasebook-api/src/controller"
+	"phrasebook-api/src/handler"
 	"phrasebook-api/src/database"
-	apiError "phrasebook-api/src/error"
+	apiError "phrasebook-api/src/response"
 	"phrasebook-api/src/repository"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -32,30 +32,35 @@ func NewApp(config config.Config, router *echo.Echo) {
 	app.setRepositories()
 	app.setCustomErrorHandling()
 
-	app.initControllers()
+	app.initHandlers()
 }
 
 func (a *app) setRepositories() {
 	a.repository.user = repository.NewUserRepository(a.db)
 }
 
-func (a *app) initControllers() {
-	controller.NewUserController(a.repository.user).InitRouting(a.router)
+func (a *app) initHandlers() {
+	handler.NewRegistrationHandler(a.repository.user).InitRouting(a.router)
 }
 
 func (a *app) setCustomErrorHandling() {
 	defaultHandler := a.router.HTTPErrorHandler
 	a.router.HTTPErrorHandler = func(err error, c echo.Context) {
-		if apiErr, ok := err.(apiError.ApiError); ok {
-			c.JSON(apiErr.GetHTTPCode(), map[string]map[string]interface{}{
-				"error": {
-					"type":        apiErr.GetErrorType(),
-					"fullMessage": apiErr.Error(),
-					"data":        apiErr,
-				},
-			})
-		} else {
-			defaultHandler(err, c)
+
+
+		
+		if apiErr, ok := err.(apiError.ApiError); !ok {
+
 		}
+
+		apiErr, ok := err.(apiError.ApiError)
+
+		c.JSON(apiErr.GetHTTPCode(), map[string]map[string]interface{}{
+			"error": {
+				"type":        apiErr.GetErrorType(),
+				"fullMessage": apiErr.Error(),
+				"data":        apiErr,
+			},
+		})
 	}
 }

@@ -1,7 +1,7 @@
 package validation
 
 import (
-	apiError "phrasebook-api/src/error"
+	apiError "phrasebook-api/src/response"
 	"phrasebook-api/src/model"
 
 	"github.com/asaskevich/govalidator"

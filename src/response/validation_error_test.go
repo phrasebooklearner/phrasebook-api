@@ -1,4 +1,4 @@
-package error
+package response
 
 import (
 	"net/http"

@@ -1,4 +1,4 @@
-package error
+package response
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func (v ValidationError) Error() string {
 }
 
 func (v ValidationError) GetHTTPCode() int {
-	return http.StatusOK
+	return http.StatusBadRequest
 }
 
 func (v ValidationError) GetErrorType() apiError {

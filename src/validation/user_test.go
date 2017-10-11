@@ -3,7 +3,7 @@ package validation
 import (
 	"testing"
 
-	apiError "phrasebook-api/src/error"
+	apiError "phrasebook-api/src/response"
 	"phrasebook-api/src/model"
 
 	"github.com/stretchr/testify/assert"
