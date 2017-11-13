@@ -7,3 +7,5 @@ import:
   - assert
 - package: github.com/asaskevich/govalidator
 - package: github.com/go-sql-driver/mysql
+- package: github.com/markbates/goth
+  version: ^1.43.0
