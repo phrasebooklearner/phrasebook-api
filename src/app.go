@@ -4,20 +4,22 @@ import (
 	"database/sql"
 
 	"phrasebook-api/src/config"
-	"phrasebook-api/src/handler"
 	"phrasebook-api/src/database"
-	apiError "phrasebook-api/src/response"
+	"phrasebook-api/src/handler/user"
 	"phrasebook-api/src/repository"
+	"phrasebook-api/src/errors"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
+	"phrasebook-api/src/handler"
+	"phrasebook-api/src/response"
 )
 
 type app struct {
-	config config.Config
-	router *echo.Echo
-	db     *sql.DB
-	repository   struct {
+	config     config.Config
+	router     *echo.Echo
+	db         *sql.DB
+	repository struct {
 		user repository.UserRepository
 	}
 }
@@ -40,27 +42,25 @@ func (a *app) setRepositories() {
 }
 
 func (a *app) initHandlers() {
-	handler.NewRegistrationHandler(a.repository.user).InitRouting(a.router)
+	var routers = []handler.RoutingInitiator{
+		user.NewRegistrationHandler(a.repository.user),
+	}
+	for _, route := range routers {
+		route.InitRouting(a.router)
+	}
 }
 
 func (a *app) setCustomErrorHandling() {
-	defaultHandler := a.router.HTTPErrorHandler
 	a.router.HTTPErrorHandler = func(err error, c echo.Context) {
-
-
-		
-		if apiErr, ok := err.(apiError.ApiError); !ok {
-
+		var apiErr errors.ApiError
+		if tmp, ok := err.(errors.ApiError); ok {
+			apiErr = tmp
+		} else if tmp, ok := err.(*echo.HTTPError); ok {
+			apiErr = errors.NewHTTPError(tmp.Code)
+		} else {
+			apiErr = errors.NewInternalError(err)
 		}
 
-		apiErr, ok := err.(apiError.ApiError)
-
-		c.JSON(apiErr.GetHTTPCode(), map[string]map[string]interface{}{
-			"error": {
-				"type":        apiErr.GetErrorType(),
-				"fullMessage": apiErr.Error(),
-				"data":        apiErr,
-			},
-		})
+		c.JSON(apiErr.GetHTTPCode(), response.ApiError(apiErr, a.config.GetDebugEnabled()))
 	}
 }

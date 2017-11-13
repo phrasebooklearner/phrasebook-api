@@ -5,19 +5,22 @@
 LOCAL_PROJECT := local-phrase
 LOCAL_COMPOSE_FILE := docker/local/docker-compose.yml
 
-deps:
-	glide install
+api-deps:
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm glide-install
 
-unit:
+unit-test:
 	go test -v phrasebook-api/src/... -tags unit
 
-run:
+api-run: api-stop
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm agent
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm migrate
-	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) build app
-	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) up app
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) up --build app
 
-stop:
+api-stop:
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) stop app
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) rm -f app
+
+api-remove:
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) down -v
 
 # ======================================================================================================================
@@ -202,10 +205,10 @@ fmt:
 	${INFO} "Applying fmt to the project..."
 	go fmt $(go list ./... | grep -v /vendor/)
 
-.PHONY: unit-test
-unit-test:
-	${INFO} "Running unit tests..."
-	go test -v phrasebook-api/src/... -tags unit
+#.PHONY: unit-test
+#unit-test:
+#	${INFO} "Running unit tests..."
+#	go test -v phrasebook-api/src/... -tags unit
 
 .PHONY: test-all
 test-all:

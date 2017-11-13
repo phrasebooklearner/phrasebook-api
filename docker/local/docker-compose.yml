@@ -7,6 +7,15 @@ volumes:
 
 services:
 
+  glide-install:
+    build:
+      context: ../../
+      dockerfile: docker/local/Dockerfile
+    command: ["glide", "install"]
+    volumes:
+      - ../../:/go/src/phrasebook-api
+      - cache:/cache
+
   app:
     build:
       context: ../../
