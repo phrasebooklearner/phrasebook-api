@@ -13,6 +13,8 @@ import (
 	"github.com/labstack/echo"
 	"phrasebook-api/src/handler"
 	"phrasebook-api/src/response"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/gplus"
 )
 
 type app struct {
@@ -33,14 +35,19 @@ func NewApp(config config.Config, router *echo.Echo) {
 
 	app.setRepositories()
 	app.setCustomErrorHandling()
+	app.setAuthProviders()
 
 	app.initHandlers()
 }
 
+// Here different data repositories are created
 func (a *app) setRepositories() {
 	a.repository.user = repository.NewUserRepository(a.db)
 }
 
+// All handlers are located in routers slice.
+// Every handler should implement handler.RoutingInitiator interface.
+// Each handler is responsible for its routing settings.
 func (a *app) initHandlers() {
 	var routers = []handler.RoutingInitiator{
 		user.NewRegistrationHandler(a.repository.user),
@@ -50,6 +57,9 @@ func (a *app) initHandlers() {
 	}
 }
 
+// All errors that are returned to the client should implement errors.ApiError interface.
+// If an error doesn't implement that interface, then it is wrapped into errors.internalServerError,
+// that implements errors.ApiError interface.
 func (a *app) setCustomErrorHandling() {
 	a.router.HTTPErrorHandler = func(err error, c echo.Context) {
 		var apiErr errors.ApiError
@@ -63,4 +73,12 @@ func (a *app) setCustomErrorHandling() {
 
 		c.JSON(apiErr.GetHTTPCode(), response.ApiError(apiErr, a.config.GetDebugEnabled()))
 	}
+}
+
+// A github.com/markbates/goth package is used as an auth library.
+func (a *app) setAuthProviders() {
+	// TODO move provider arguments to config
+	goth.UseProviders(
+		gplus.New("44166123467-o6brs9o43tgaek9q12lef07bk48m3jmf.apps.googleusercontent.com", "rpXpakthfjPVoFGvcf9CVCu7", "http://localhost:8080/auth/callback/google"),
+	)
 }
