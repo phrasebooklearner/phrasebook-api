@@ -1,26 +1,31 @@
 # ======================================================================================================================
-# LOCAL TARGETS AND FUNCTIONS
+# LOCAL DEVELOPMENT TARGETS AND FUNCTIONS
 # ======================================================================================================================
 
 LOCAL_PROJECT := local-phrase
 LOCAL_COMPOSE_FILE := docker/local/docker-compose.yml
 
-api-deps:
+dev-prepare:
+	docker volume create --name dev-cache
+
+dev-deps: dev-prepare
+	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) build glide-install
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm glide-install
 
-unit-test:
+dev-test:
+	docker volume create --name local-cache
 	go test -v phrasebook-api/src/... -tags unit
 
-api-run: api-stop
+dev-run: dev-prepare dev-stop
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm agent
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) run --rm migrate
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) up --build app
 
-api-stop:
+dev-stop:
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) stop app
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) rm -f app
 
-api-remove:
+dev-remove:
 	docker-compose -p $(LOCAL_PROJECT) -f $(LOCAL_COMPOSE_FILE) down -v
 
 # ======================================================================================================================
