@@ -9,3 +9,6 @@ import:
 - package: github.com/go-sql-driver/mysql
 - package: github.com/markbates/goth
   version: ^1.43.0
+- package: golang.org/x/net
+  subpackages:
+  - context

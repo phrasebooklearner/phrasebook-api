@@ -1,10 +1,14 @@
-hash: 03f66bd732331282196ffbf37a025fb2b57c78065c0bdfed5b5541b7adad0a8b
-updated: 2017-11-13T21:35:32.302835198+03:00
+hash: e117ba5237a868e1158b3e977a97284f572cd1f2f77e0ff74015fae5ee0c1b4e
+updated: 2017-11-14T22:34:28.32483731+03:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: aa5cce4a76edb1a5acecab1870c17abbffb5419e
 - name: github.com/go-sql-driver/mysql
   version: 8fefef06da7707b5a3cda42195a6b409c9c9ab5c
+- name: github.com/golang/protobuf
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
+  subpackages:
+  - proto
 - name: github.com/labstack/echo
   version: 1049c9613cd371b7ea8f219404c9a821734781ed
 - name: github.com/labstack/gommon
@@ -14,6 +18,8 @@ imports:
   - log
 - name: github.com/markbates/goth
   version: 86ca064cf1b7ebefa670bdc9eaadba0f3a6d9607
+  subpackages:
+  - providers/gplus
 - name: github.com/mattn/go-colorable
   version: 941b50ebc6efddf4c41c8e4537a5f68a4e686b24
 - name: github.com/mattn/go-isatty
@@ -31,10 +37,29 @@ imports:
   subpackages:
   - acme
   - acme/autocert
+- name: golang.org/x/net
+  version: a337091b0525af65de94df2eb7e98bd9962dcbe2
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: golang.org/x/oauth2
+  version: 9ff8ebcc8e241d46f52ecc5bff0e5a2f2dbef402
+  subpackages:
+  - internal
 - name: golang.org/x/sys
   version: d18155cb60f6162f5e706d7f26e4e50a3d4da857
   subpackages:
   - unix
+- name: google.golang.org/appengine
+  version: 9d8544a6b2c7df9cff240fcf92d7b2f59bc13416
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 testImports:
 - name: github.com/davecgh/go-spew
   version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
